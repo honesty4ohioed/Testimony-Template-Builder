@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Your Testimony</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d2433;--mute:#5d6678;--line:#d9d6cc;--acc:#1f4e79;--accbg:#e8f0f8}
+@media(prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--ink:#e8eaef;--mute:#a0a8b8;--line:#343b48;--acc:#7fb2e5;--accbg:#22303f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,'Times New Roman',serif}
+header{padding:24px 20px 8px;max-width:1200px;margin:auto}
+h1{margin:0 0 4px;font-size:1.7rem}
+header p{margin:4px 0;color:var(--mute);font-family:system-ui,sans-serif;font-size:.95rem}
+.app{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1200px;margin:auto;padding:12px 20px 40px}
+@media(max-width:860px){.app{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px;font-family:system-ui,sans-serif}
+.card h2{margin:0 0 4px;font-size:1.05rem;font-family:Georgia,serif}
+.hint{color:var(--mute);font-size:.88rem;margin:0 0 10px}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:.95rem}
+textarea{min-height:76px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sticky{position:sticky;top:12px;align-self:start}
+#out{min-height:420px;font:15px/1.55 Georgia,serif;white-space:pre-wrap}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+button{padding:8px 14px;border-radius:6px;border:1px solid var(--acc);background:var(--acc);color:#fff;font:600 .9rem system-ui,sans-serif;cursor:pointer}
+button.alt{background:transparent;color:var(--acc)}
+.tabs button{background:transparent;color:var(--acc)}
+.tabs button.on{background:var(--acc);color:#fff}
+.stat{font-size:.88rem;color:var(--mute)}
+.warn{color:#b3261e;font-weight:600}
+.note{background:var(--accbg);border-radius:6px;padding:8px 10px;font-size:.88rem;margin:8px 0}
+.tp{margin:6px 0 0;padding-left:20px;font-size:.9rem}
+.tips summary{cursor:pointer;font-weight:600;font-family:Georgia,serif}
+.tips ul{margin:8px 0 0;padding-left:20px;font-size:.9rem}.tips li{margin-bottom:6px}
+.chk label{display:flex;gap:8px;font-weight:400;margin:6px 0;font-size:.88rem}.chk input{width:auto}
+button.sm{padding:2px 8px;font-size:.78rem;margin-left:8px}
+a.btn{padding:8px 14px;border-radius:6px;background:var(--acc);color:#fff;text-decoration:none;font:600 .9rem system-ui,sans-serif}
+#printArea{display:none}
+@media print{.app,header{display:none}#printArea{display:block;white-space:pre-wrap;font:12pt/1.5 Georgia,serif;color:#000}body{background:#fff}}
+</style>
+</head>
+<body>
+
+<script>
+/* ===== EDIT THIS BLOCK FOR EACH CALL TO ACTION =====
+   You can also override any value with a link, e.g.
+   index.html?bill=HB%20123&committee=House%20Health%20Committee&position=oppose&chair=Smith */
+const CAMPAIGN = {
+  org: "Your Organization",
+  state: "Ohio",
+  bill: "HB 000",
+  billTitle: "Short title of the bill",
+  committee: "Committee Name",
+  chair: "", vice: "", ranking: "",
+  hearingDate: "",
+  position: "oppose",            // support | oppose | concerns
+  deadline: "",                  // e.g. "Friday, 5 p.m."
+  submitUrl: "",                 // link to the committee's testimony submission page
+  submitNote: "",                // e.g. "Written testimony is due 24 hours before the hearing."
+  talkingPoints: []              // [{text: "A fact or argument", source: "Organization, title, year, link"}]
+};
+
+/* OPTIONAL: one entry per bill. Each bill gets its own committee, submission link and talking points.
+   People reach a bill with a link like index.html?bill=HB%20123, or a dropdown appears if you list 2+ bills.
+   Anything you leave out falls back to the CAMPAIGN block above. Replace these examples. */
+const BILLS = {
+  "HB 123": {
+    billTitle: "Example bill title", committee: "House Example Committee",
+    chair: "", vice: "", ranking: "", hearingDate: "", position: "oppose",
+    submitUrl: "https://example.gov/submit-testimony",
+    talkingPoints: [
+      {text: "Example point: this bill would do X, which affects Y.", source: "Example Org, Report Title, 2026, https://example.org"},
+      {text: "Example point without a source."}
+    ]
+  }
+};
+</script>
+
+<header>
+  <h1 id="title">Build Your Testimony</h1>
+  <p id="sub"></p>
+  <p>Answer what applies to you; skip the rest. Your testimony builds on the right as you type. Nothing you write is saved or sent anywhere. Share only what you’re comfortable having on the public record.</p>
+</header>
+
+<div class="app">
+<div id="form">
+
+  <div class="card tips"><details open><summary>How to write strong testimony (read first)</summary>
+    <ul>
+      <li><b>Professional, but personal.</b> Address the committee respectfully and use plain words, but write like yourself. Your own experience is what lawmakers can’t get from lobbyists.</li>
+      <li><b>Be specific.</b> “I drive 45 minutes each way” beats “this hurts rural families.” Use real numbers, places, and dates.</li>
+      <li><b>Cite your sources.</b> Name where every statistic, study, or law comes from. Never guess at a number. If you can’t source it, say it’s your experience (“in my classroom, I see…”).</li>
+      <li><b>One story, told briefly.</b> Testimony is public record. Share only what you’re comfortable seeing published, and leave out children’s names, your street address, and private medical details.</li>
+      <li><b>Stay on this bill.</b> Refer to it by number, criticize the policy rather than people, and make one clear ask.</li>
+      <li><b>Use your own voice.</b> Talking points are a starting point. Rewrite them; copied language gets noticed.</li>
+    </ul></details></div>
+
+  <div class="card">
+    <h2>Bill &amp; committee</h2><div id="billPick"></div>
+    <p class="hint">Prefilled from the call to action. Check these against the committee’s page.</p>
+    <div class="row">
+      <div><label for="bill">Bill number</label><input id="bill"></div>
+      <div><label for="committee">Committee name</label><input id="committee"></div>
+    </div>
+    <div class="row">
+      <div><label for="chair">Chair (last name)</label><input id="chair"></div>
+      <div><label for="vice">Vice Chair (last name)</label><input id="vice"></div>
+    </div>
+    <div class="row">
+      <div><label for="ranking">Ranking Member (last name)</label><input id="ranking"></div>
+      <div><label for="date">Hearing date</label><input id="date"></div>
+    </div>
+    <div id="tpBox"></div>
+  </div>
+
+  <div class="card">
+    <h2>1. Who are you?</h2>
+    <label for="name">Your name</label><input id="name">
+    <div class="row">
+      <div><label for="place">City or county</label><input id="place"></div>
+      <div></div>
+    </div>
+    <label for="who">How would you describe yourself in a way that matters here?</label>
+    <input id="who" placeholder="a parent and elementary teacher">
+    <p class="hint">Examples: a parent, student, small business owner, healthcare worker, renter, patient, retiree, advocate.</p>
+    <label for="contact">Contact info (optional, written testimony only)</label><input id="contact" placeholder="email or phone">
+  </div>
+
+  <div class="card">
+    <h2>2. Why are you connected to this issue?</h2>
+    <p class="hint">Completes: “I am writing today because…”. How does it affect your family, job, school, health, finances, or community?</p>
+    <textarea id="conn"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>3. Your position</h2>
+    <label for="pos">I…</label>
+    <select id="pos"><option value="support">support</option><option value="oppose">oppose</option><option value="concerns">have concerns about</option></select>
+    <label for="reason">What is the most important reason for your position?</label>
+    <p class="hint">One clear reason, backed by a fact or experience. If you use a number or study, add it under “Cite your sources.”</p>
+    <textarea id="reason"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>4. What would this bill mean for you?</h2>
+    <p class="hint">Be specific. “My family will drive 45 minutes farther” beats “This hurts families.” Try: If this bill becomes law, I will have to… my community will…</p>
+    <textarea id="impact"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>5. Tell one story</h2>
+    <p class="hint">What happened, who was affected, what did it cost in time, money, safety, health, or stress?</p>
+    <textarea id="story"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>6. Is there a better way? <span class="stat">(optional)</span></h2>
+    <p class="hint">If you support the bill, you can leave this blank.</p>
+    <label for="problem">The bill is intended to…</label><input id="problem">
+    <label for="alt">I encourage the committee to consider…</label><textarea id="alt"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>7. Questions for lawmakers <span class="stat">(optional)</span></h2>
+    <p class="hint">One per line. Who enforces it? Who pays? Who could be unintentionally harmed? What evidence shows it works? (Left out of oral testimony to save time.)</p>
+    <textarea id="qs"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>8. What if lawmakers make the opposite choice? <span class="stat">(optional)</span></h2>
+    <label for="act">If the committee chooses to…</label>
+    <select id="act">
+      <option value="advance this legislation">advance this legislation</option>
+      <option value="reject this legislation">reject this legislation</option>
+      <option value="take no action">take no action</option>
+    </select>
+    <label for="result">…the result will be</label><textarea id="result" placeholder="a concrete consequence, not just “good” or “bad”"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Cite your sources <span class="stat">(optional, encouraged)</span></h2>
+    <p class="hint">One per line: organization or author, title, year, and a link if you have one. Written testimony lists them at the end; oral testimony offers to share them.</p>
+    <textarea id="sources"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>9. Your clear ask</h2>
+    <select id="ask">
+      <option value="vote in favor of {b}">Vote for the bill</option>
+      <option value="vote against {b}">Vote against the bill</option>
+      <option value="not advance {b} in its current form">Do not advance it in its current form</option>
+      <option value="amend {b}">Amend it</option>
+      <option value="hold additional hearings on {b}">Hold additional hearings</option>
+      <option value="delay action on {b} until important questions are answered">Delay action</option>
+      <option value="__other">Other (write your own)</option>
+    </select>
+    <input id="askOther" placeholder="e.g. amend Section 4 to add an exemption for…" style="display:none;margin-top:8px">
+  </div>
+</div>
+
+<div class="sticky">
+  <div class="card">
+    <div class="bar tabs">
+      <button id="mWritten" class="on">Written</button>
+      <button id="mOral">Oral</button>
+      <span class="stat" id="stat"></span>
+    </div>
+    <p class="note" id="modeNote"></p>
+    <textarea id="out" aria-label="Your testimony"></textarea>
+    <p class="note" id="manualNote" style="display:none">You edited the text directly, so form changes won’t overwrite it. <a href="#" id="rebuild">Rebuild from worksheet</a></p>
+    <div class="bar">
+      <button id="copy">Copy</button>
+      <button id="dl" class="alt">Download .txt</button>
+      <button id="print" class="alt">Print</button>
+      <a id="submitBtn" class="btn" target="_blank" rel="noopener" style="display:none">Go to submission page ↗</a>
+    </div>
+    <p class="hint" id="submit"></p>
+    <details class="tips"><summary>Proofread before you submit</summary><div class="chk">
+      <label><input type="checkbox"> Bill number, committee, and member names are spelled correctly</label>
+      <label><input type="checkbox"> My position and my ask match (e.g., oppose means vote against)</label>
+      <label><input type="checkbox"> Every fact and number is accurate and has a source listed</label>
+      <label><input type="checkbox"> No [bracketed] placeholders remain</label>
+      <label><input type="checkbox"> I read it out loud once and fixed awkward sentences (oral: I timed it)</label>
+      <label><input type="checkbox"> Spelling, grammar, and tone are respectful and professional</label>
+      <label><input type="checkbox"> Nothing private I don’t want on the public record</label>
+    </div></details>
+  </div>
+</div>
+</div>
+<div id="printArea"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const q = new URLSearchParams(location.search);
+const norm = s => (s || "").replace(/\s+/g, "").toUpperCase();
+const want = q.get("bill") || CAMPAIGN.bill;
+const key = Object.keys(BILLS).find(k => norm(k) === norm(want));
+const C = Object.assign({}, CAMPAIGN, key ? BILLS[key] : {});
+C.bill = key || want;
+["committee","chair","vice","ranking","position","state","hearingDate","deadline"].forEach(k => { if (q.get(k)) C[k] = q.get(k); });
+if (/^https?:\/\//i.test(q.get("submit") || "")) C.submitUrl = q.get("submit");
+const esc = t => String(t).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+
+let mode = "written", manual = false;
+const ids = ["bill","committee","chair","vice","ranking","date","name","place","who","contact","conn","pos","reason","impact","story","problem","alt","qs","act","result","sources","ask","askOther"];
+const v = id => $(id).value.trim();
+const ph = (s, label) => s || "[" + label + "]";
+const endp = s => /[.!?]$/.test(s) ? s : s + ".";
+const lc = s => s ? s.charAt(0).toLowerCase() + s.slice(1) : s;
+
+// Prefill
+$("bill").value = C.bill; $("committee").value = C.committee;
+$("chair").value = C.chair; $("vice").value = C.vice; $("ranking").value = C.ranking;
+$("date").value = C.hearingDate; $("pos").value = C.position;
+if (C.org) document.title = "Testimony Builder · " + C.org;
+$("sub").textContent = [C.bill + (C.billTitle ? ": " + C.billTitle : ""), C.committee, C.deadline && "Deadline: " + C.deadline].filter(Boolean).join(" · ");
+const tps = C.talkingPoints.map(t => typeof t === "string" ? {text: t} : t);
+if (tps.length) {
+  const box = $("tpBox"); box.className = "note";
+  box.innerHTML = "<b>Talking points from " + esc(C.org) + "</b><br>Click Add to drop a point into section 3, then rewrite it in your own words. Use only what is true for you; lawmakers notice identical testimony.<ul class='tp'></ul>";
+  tps.forEach(t => {
+    const li = document.createElement("li");
+    li.append(t.text + (t.source ? " (Source: " + t.source + ")" : ""));
+    const b = document.createElement("button"); b.type = "button"; b.className = "alt sm"; b.textContent = "Add"; b.onclick = () => addPoint(t);
+    li.append(b); box.querySelector("ul").append(li);
+  });
+}
+function addPoint(t) {
+  const r = $("reason"); r.value = (r.value.trim() ? r.value.trim() + " " : "") + t.text;
+  if (t.source) { const so = $("sources"); if (!so.value.includes(t.source)) so.value = (so.value.trim() ? so.value.trim() + "\n" : "") + t.source; }
+  refresh(); r.focus();
+}
+const keys = Object.keys(BILLS);
+if (keys.length > 1) {
+  const sel = document.createElement("select"); sel.setAttribute("aria-label", "Choose a bill");
+  keys.forEach(k => { const o = document.createElement("option"); o.value = k; o.textContent = k + (BILLS[k].billTitle ? " – " + BILLS[k].billTitle : ""); sel.append(o); });
+  sel.value = C.bill; sel.onchange = () => { location.search = "?bill=" + encodeURIComponent(sel.value); };
+  $("billPick").append(sel);
+}
+$("submit").textContent = (C.submitUrl ? "Next step: copy your testimony, then paste it into the committee’s submission page. " : "") + C.submitNote;
+if (C.submitUrl) { $("submitBtn").href = C.submitUrl; $("submitBtn").style.display = "inline-block"; }
+
+function setActDefault() { $("act").value = $("pos").value === "support" ? "take no action" : "advance this legislation"; }
+setActDefault();
+
+function build() {
+  const w = mode === "written", b = ph(v("bill"), "Bill number"), st = C.state;
+  const verb = {support:"support", oppose:"oppose", concerns:"have concerns about"}[v("pos")];
+  const label = {support:"Support", oppose:"Opposition", concerns:"Interested Party"}[v("pos")];
+  const askT = $("ask").value === "__other" ? ph(v("askOther"), "your ask") : $("ask").value.replace("{b}", b);
+  const name = ph(v("name"), "Your name");
+  const out = [];
+
+  if (w) out.push(`Written Testimony on ${b}\n${label} Testimony\n${ph(v("committee"), "Committee name")}${v("date") ? "\n" + v("date") : ""}`);
+  const people = [`Chair ${ph(v("chair"), "Last name")}`, `Vice Chair ${ph(v("vice"), "Last name")}`, `Ranking Member ${ph(v("ranking"), "Last name")}`];
+  out.push(`${people.join(", ")}, and members of the ${ph(v("committee"), "Committee name")}:`);
+
+  out.push(`My name is ${name}, and I am ${ph(v("who"), "how you describe yourself")} from ${ph(v("place"), "city or county")}, ${st}.`);
+  if (!w) out.push(`I ${verb} ${b}, and I am asking the committee to ${askT}.`);
+  if (v("conn")) out.push(`I am ${w ? "writing" : "here"} today because ${endp(lc(v("conn")))}`);
+  if (v("reason")) out.push(w ? `I ${verb} ${b} because ${endp(lc(v("reason")))}` : `Here is why: ${endp(v("reason"))}`);
+  if (v("impact")) out.push(endp(v("impact")));
+  if (v("story")) out.push(endp(v("story")));
+  if (v("problem") && v("alt")) out.push(`I understand that this legislation is intended to ${v("problem").replace(/\.$/, "")}. However, I encourage the committee to consider ${endp(lc(v("alt")))}`);
+  else if (v("alt")) out.push(`I encourage the committee to consider ${endp(lc(v("alt")))}`);
+  const qs = v("qs").split("\n").map(s => s.trim()).filter(Boolean);
+  if (w && qs.length) out.push("I also encourage committee members to ask:\n" + qs.map(s => "  • " + s).join("\n"));
+  if (v("result")) out.push(`If the committee chooses to ${v("act")}, the result will be ${endp(lc(v("result")))}`);
+  out.push(`For these reasons, I respectfully ask the committee to ${askT}.`);
+  const src = v("sources").split("\n").map(x => x.trim()).filter(Boolean);
+  if (w && src.length) out.push("Sources:\n" + src.map((x, i) => "  " + (i + 1) + ". " + x).join("\n"));
+  if (!w && src.length) out.push("I am happy to provide the sources for the facts and figures I have shared.");
+  out.push("Thank you for the opportunity to provide testimony.");
+  out.push(w ? `Respectfully,\n${name}\n${ph(v("place"), "City or county")}, ${st}${v("contact") ? "\n" + v("contact") : ""}` : `${name}\n${ph(v("place"), "City or county")}, ${st}`);
+  return out.join("\n\n");
+}
+
+function stats() {
+  const words = $("out").value.trim().split(/\s+/).filter(Boolean).length;
+  let s = words + " words"; const left = ($("out").value.match(/\[[^\]]+\]/g) || []).length;
+  if (mode === "oral") {
+    const min = (words / 130).toFixed(1);
+    s += ` · about ${min} min aloud`;
+    $("stat").className = words > 400 ? "stat warn" : "stat";
+    if (words > 400) s += " (over the usual 2–3 minutes; trim)";
+  } else $("stat").className = "stat";
+  if (left) { s += " · " + left + " [bracketed] item(s) still to fill in or delete"; $("stat").className = "stat warn"; }
+  $("stat").textContent = s;
+}
+
+function refresh(force) {
+  if (!manual || force) { $("out").value = build(); manual = false; $("manualNote").style.display = "none"; }
+  $("modeNote").textContent = mode === "written"
+    ? "Written testimony: usually 1–2 pages. Check the committee’s page or word limits."
+    : "Oral testimony: usually 2–3 minutes (about 250–400 words). Position and ask come first and are repeated at the end. Questions are left out; read aloud and time yourself.";
+  stats();
+}
+
+ids.forEach(id => $(id).addEventListener("input", () => { if (id === "askOther" || id) refresh(); }));
+$("ask").addEventListener("change", () => { $("askOther").style.display = $("ask").value === "__other" ? "block" : "none"; refresh(); });
+$("pos").addEventListener("change", () => { setActDefault(); refresh(); });
+$("out").addEventListener("input", () => { manual = true; $("manualNote").style.display = "block"; stats(); });
+$("rebuild").addEventListener("click", e => { e.preventDefault(); refresh(true); });
+[["mWritten","written"],["mOral","oral"]].forEach(([id, m]) => $(id).addEventListener("click", () => {
+  mode = m; $("mWritten").classList.toggle("on", m === "written"); $("mOral").classList.toggle("on", m === "oral"); refresh(true);
+}));
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("out").value); $("copy").textContent = "Copied!"; }
+  catch (e) { $("out").select(); document.execCommand("copy"); $("copy").textContent = "Copied!"; }
+  setTimeout(() => $("copy").textContent = "Copy", 1500);
+});
+$("dl").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([$("out").value], {type: "text/plain"}));
+  a.download = "testimony-" + v("bill").replace(/\s+/g, "") + "-" + mode + ".txt"; a.click();
+});
+$("print").addEventListener("click", () => { $("printArea").textContent = $("out").value; window.print(); });
+
+refresh(true);
+</script>
+</body>
+</html>
